@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 
 
@@ -7,16 +8,20 @@ def run():
     print("================================\n")
 
     try:
-        installed = subprocess.run(
-            ["docker", "--version"],
-            capture_output=True,
-            text=True
-        )
+        docker = shutil.which("docker")
 
-        if installed.returncode == 0:
-            print(f"[✓] Docker already installed:")
-            print(installed.stdout.strip())
+        if docker:
+            result = subprocess.run(
+                ["docker", "--version"],
+                capture_output=True,
+                text=True
+            )
+
+            print(f"[✓] Docker already installed.")
+            print(result.stdout.strip())
+
         else:
+            print("[+] Docker not found.")
             print("[+] Installing Docker...\n")
 
             subprocess.run(
@@ -29,15 +34,15 @@ def run():
             check=True
         )
 
-        print("\n[✓] Docker service is running.")
-
         result = subprocess.run(
             ["docker", "--version"],
             capture_output=True,
-            text=True
+            text=True,
+            check=True
         )
 
-        print(f"[✓] {result.stdout.strip()}")
+        print("\n[✓] Docker is ready.")
+        print(result.stdout.strip())
 
     except Exception as e:
         print(f"\n[ERROR] {e}")

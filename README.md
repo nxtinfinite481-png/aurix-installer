@@ -28,3 +28,14 @@ Run this command on a fresh Ubuntu VPS:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/nxtinfinite481-png/aurix-installer/main/install.sh)
+
+---
+
+## ▶️ Run AURIX Again
+
+After the first installation, you **do not need to run `install.sh` again**.
+
+To open the AURIX Installer menu again:
+
+```bash
+cd /opt/aurix-installer && source .venv/bin/activate && python3 aurix.py

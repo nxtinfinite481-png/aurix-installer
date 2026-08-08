@@ -1,196 +1,102 @@
 import os
-
-from assets.banner import banner, clear
-from assets.colors import Colors as C
-
-
-CONFIG = "/etc/pterodactyl/config.yml"
-
-
-def cmd(command):
-    os.system(command)
-
-
-def output(command):
-    return os.popen(command).read().strip()
-
-
-def menu():
-
-    while True:
-
-        clear()
-        banner()
-
-        print(f"{C.BRIGHT_WHITE}══════════════════════════════════════════════")
-        print(f"{C.BRIGHT_CYAN}            PTERODACTYL WINGS")
-        print(f"{C.BRIGHT_WHITE}══════════════════════════════════════════════")
-
-        print(f"""
-{C.BRIGHT_YELLOW}[1]{C.WHITE} Install Wings
-
-{C.BRIGHT_YELLOW}[2]{C.WHITE} Download Node Configuration
-
-{C.BRIGHT_YELLOW}[3]{C.WHITE} Show Current Remote
-
-{C.BRIGHT_YELLOW}[4]{C.WHITE} Change Remote URL
-
-{C.BRIGHT_YELLOW}[5]{C.WHITE} Restart Wings
-
-{C.BRIGHT_YELLOW}[6]{C.WHITE} Wings Status
-
-{C.BRIGHT_YELLOW}[7]{C.WHITE} Wings Logs
-
-{C.BRIGHT_YELLOW}[8]{C.WHITE} Open Config
-
-{C.BRIGHT_YELLOW}[9]{C.WHITE} Check API (401 Test)
-
-{C.BRIGHT_RED}[0]{C.WHITE} Back
-""")
-
-        choice = input(f"{C.BRIGHT_CYAN}Select Option ➜ {C.RESET}")
-
-        # -------------------------------------
-
-        if choice == "1":
-
-            clear()
-            banner()
-
-            print(f"{C.GREEN}Installing Wings...\n{C.RESET}")
-
-            cmd("bash <(curl -s https://pterodactyl-installer.se)")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "2":
-
-            clear()
-            banner()
-
-            print("""
-
-Go To:
-
-Admin
-↓
-
-Nodes
-
-↓
-
-Configuration
-
-↓
-
-Copy
-
-↓
-
-Paste into
-
-/etc/pterodactyl/config.yml
-
-""")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "3":
-
-            clear()
-            banner()
-
-            print(output(f"grep '^remote:' {CONFIG}"))
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "4":
-
-            clear()
-            banner()
-
-            remote = input("Panel URL : ").strip()
-
-            cmd(
-                f"sed -i 's|^remote:.*|remote: {remote}|' {CONFIG}"
-            )
-
-            print("\nUpdated Successfully.")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "5":
-
-            clear()
-            banner()
-
-            cmd("systemctl restart wings")
-
-            print("\nWings Restarted.")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "6":
-
-            clear()
-            banner()
-
-            cmd("systemctl status wings --no-pager")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "7":
-
-            clear()
-            banner()
-
-            cmd("journalctl -u wings -n 100 --no-pager")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "8":
-
-            clear()
-            banner()
-
-            cmd("nano /etc/pterodactyl/config.yml")
-
-        # -------------------------------------
-
-        elif choice == "9":
-
-            clear()
-            banner()
-
-            domain = input("Node Domain : ")
-
-            cmd(f"curl -vk https://{domain}/api/system")
-
-            input("\nPress Enter...")
-
-        # -------------------------------------
-
-        elif choice == "0":
-            break
-
-        else:
-
-            input("\nInvalid Option...")
+import subprocess
 
 
 def run():
-    menu()
+    print("\n================================")
+    print("        PTERODACTYL WINGS")
+    print("================================\n")
+
+    try:
+        os.makedirs("/etc/pterodactyl", exist_ok=True)
+
+        installed = subprocess.run(
+            ["wings", "--version"],
+            capture_output=True,
+            text=True
+        )
+
+        if installed.returncode == 0:
+            print("[✓] Wings is already installed.")
+            print(installed.stdout.strip())
+        else:
+            print("[+] Downloading Wings...\n")
+
+            subprocess.run(
+                [
+                    "bash",
+                    "-c",
+                    "curl -L -o /usr/local/bin/wings "
+                    "https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
+                ],
+                check=True
+            )
+
+            subprocess.run(
+                ["chmod", "u+x", "/usr/local/bin/wings"],
+                check=True
+            )
+
+            print("\n[✓] Wings installed.")
+
+        print("\n--------------------------------")
+        print("Wings configuration")
+        print("--------------------------------")
+
+        config = "/etc/pterodactyl/config.yml"
+
+        if os.path.exists(config):
+            print("[✓] Wings config.yml found.")
+        else:
+            print("[!] Wings config.yml not found.")
+            print("\nCreate the node in your Pterodactyl Panel first.")
+            print("Then download/copy the generated Wings configuration")
+            print(f"to:\n{config}")
+
+        service = "/etc/systemd/system/wings.service"
+
+        if not os.path.exists(service):
+            with open(service, "w") as file:
+                file.write("""[Unit]
+Description=Pterodactyl Wings Daemon
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=root
+WorkingDirectory=/etc/pterodactyl
+LimitNOFILE=4096
+PIDFile=/var/run/wings/daemon.pid
+ExecStart=/usr/local/bin/wings
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+""")
+
+            subprocess.run(
+                ["systemctl", "daemon-reload"],
+                check=True
+            )
+
+        if os.path.exists(config):
+            subprocess.run(
+                ["systemctl", "enable", "--now", "wings"],
+                check=False
+            )
+
+            print("\n[✓] Wings service started.")
+
+            subprocess.run(
+                ["systemctl", "--no-pager", "status", "wings"],
+                check=False
+            )
+
+        else:
+            print("\n[!] Wings service was not started because config.yml is missing.")
+
+    except Exception as e:
+        print(f"\n[ERROR] {e}")
+
+    input("\nPress Enter to continue...")

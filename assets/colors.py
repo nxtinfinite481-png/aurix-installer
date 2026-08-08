@@ -1,9 +1,5 @@
-# ==========================================
-# AURIX INSTALLER
-# Made by INFINITE
-# ==========================================
-
 class Colors:
+
     RESET = "\033[0m"
 
     BLACK = "\033[30m"
@@ -23,6 +19,3 @@ class Colors:
     BRIGHT_MAGENTA = "\033[95m"
     BRIGHT_CYAN = "\033[96m"
     BRIGHT_WHITE = "\033[97m"
-
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"

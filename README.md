@@ -1,22 +1,30 @@
 # AURIX Installer
 
-AURIX is a VPS installation and management toolkit made by INFINITE.
+> 🚀 Simple VPS installer for AURIX infrastructure  
+> Made by **INFINITE**
 
-## Features
+AURIX Installer is a menu-based installer designed to simplify common VPS and Pterodactyl setup tasks.
 
-- System Update
+---
+
+## ✨ Features
+
+- System Update & Upgrade
 - Hostname Configuration
 - SSH Configuration
-- Tailscale
-- Docker
-- Pterodactyl Panel
-- Cloudflare Tunnel
-- Pterodactyl Wings
-- Blueprint
+- Tailscale Installation
+- Docker Installation
+- Pterodactyl Panel Setup
+- Cloudflare Tunnel Setup
+- Pterodactyl Wings Setup
+- Pterodactyl Addons / Blueprint
+- Simple interactive menu
 
-## Installation
+---
 
-Run:
+## 📦 One-Line Installation
+
+Run this command on a fresh Ubuntu VPS:
 
 ```bash
-bash install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/nxtinfinite481-png/aurix-installer/main/install.sh)

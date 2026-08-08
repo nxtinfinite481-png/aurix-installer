@@ -8,7 +8,7 @@ token: YOUR_TOKEN
 
 api:
   host: 0.0.0.0
-  port: 443
+  port: 8080
   ssl:
     enabled: false
     cert: /etc/letsencrypt/live/node.example.com/fullchain.pem

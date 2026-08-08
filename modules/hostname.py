@@ -1,76 +1,45 @@
-import os
-
-from assets.banner import banner, clear
-from assets.colors import Colors as C
-
-
-def run(command):
-    os.system(command)
-
-
-def current_hostname():
-    return os.popen("hostname").read().strip()
-
-
-def menu():
-
-    while True:
-
-        clear()
-        banner()
-
-        print(f"{C.BRIGHT_WHITE}══════════════════════════════════════════════")
-        print(f"{C.BRIGHT_CYAN}           CHANGE HOSTNAME")
-        print(f"{C.BRIGHT_WHITE}══════════════════════════════════════════════\n")
-
-        print(f"{C.BRIGHT_GREEN}Current Hostname : {C.WHITE}{current_hostname()}\n")
-
-        print(f"""
-{C.BRIGHT_YELLOW}[1]{C.WHITE} Change Hostname
-
-{C.BRIGHT_RED}[0]{C.WHITE} Back
-""")
-
-        choice = input(f"{C.BRIGHT_CYAN}Select Option ➜ {C.RESET}")
-
-        if choice == "1":
-
-            new = input("\nEnter New Hostname: ").strip()
-
-            if new == "":
-                input("\nHostname cannot be empty...")
-                continue
-
-            print("\nChanging Hostname...\n")
-
-            run(f"hostnamectl set-hostname {new}")
-
-            run(f'echo "{new}" > /etc/hostname')
-
-            run(
-                f"sed -i 's/127.0.1.1.*/127.0.1.1 {new}/' /etc/hosts"
-            )
-
-            print(f"{C.BRIGHT_GREEN}")
-
-            print("✓ Hostname Updated Successfully.")
-
-            print(f"""
-Current Hostname : {current_hostname()}
-
-It is recommended to reboot the VPS.
-
-{C.RESET}
-""")
-
-            input("Press Enter...")
-
-        elif choice == "0":
-            break
-
-        else:
-            input("\nInvalid Option...")
+import subprocess
 
 
 def run():
-    menu()
+    print("\n================================")
+    print("        HOSTNAME SETUP")
+    print("================================\n")
+
+    current = subprocess.getoutput("hostname")
+    print(f"Current hostname: {current}\n")
+
+    hostname = input("Enter new hostname: ").strip()
+
+    if not hostname:
+        print("\n[ERROR] Hostname cannot be empty.")
+        input("Press Enter to continue...")
+        return
+
+    try:
+        subprocess.run(
+            ["hostnamectl", "set-hostname", hostname],
+            check=True
+        )
+
+        with open("/etc/hosts", "r") as file:
+            hosts = file.read()
+
+        lines = hosts.splitlines()
+        updated = []
+
+        for line in lines:
+            if line.strip().startswith("127.0.1.1"):
+                updated.append(f"127.0.1.1\t{hostname}")
+            else:
+                updated.append(line)
+
+        with open("/etc/hosts", "w") as file:
+            file.write("\n".join(updated) + "\n")
+
+        print(f"\n[✓] Hostname changed to: {hostname}")
+
+    except Exception as e:
+        print(f"\n[ERROR] {e}")
+
+    input("\nPress Enter to continue...")

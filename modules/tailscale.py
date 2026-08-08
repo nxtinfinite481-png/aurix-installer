@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 
 
@@ -7,22 +8,24 @@ def run():
     print("================================\n")
 
     try:
-        installed = subprocess.run(
-            ["which", "tailscale"],
-            capture_output=True
-        )
-
-        if installed.returncode != 0:
+        if not shutil.which("tailscale"):
+            print("[+] Tailscale not found.")
             print("[+] Installing Tailscale...\n")
 
             subprocess.run(
-                ["bash", "-c", "curl -fsSL https://tailscale.com/install.sh | sh"],
+                [
+                    "bash",
+                    "-c",
+                    "curl -fsSL https://tailscale.com/install.sh | sh"
+                ],
                 check=True
             )
 
+        print("[✓] Tailscale is installed.\n")
+
         subprocess.run(
             ["systemctl", "enable", "--now", "tailscaled"],
-            check=True
+            check=False
         )
 
         status = subprocess.run(
@@ -31,20 +34,25 @@ def run():
             text=True
         )
 
-        if status.returncode == 0:
-            print("[✓] Tailscale is already connected.")
-        else:
+        if status.returncode != 0:
             print("[+] Tailscale is not connected.")
-            print("\nRun the following command to authenticate:\n")
-            print("    tailscale up\n")
+            print("[+] Opening Tailscale authentication...\n")
 
-            subprocess.run(["tailscale", "up"])
+            subprocess.run(
+                ["tailscale", "up"],
+                check=False
+            )
+        else:
+            print("[✓] Tailscale is already connected.")
 
         print("\n--------------------------------")
-        print("Tailscale IPv4:")
+        print("Tailscale IPv4")
         print("--------------------------------")
 
-        subprocess.run(["tailscale", "ip", "-4"])
+        subprocess.run(
+            ["tailscale", "ip", "-4"],
+            check=False
+        )
 
     except Exception as e:
         print(f"\n[ERROR] {e}")

@@ -1,0 +1,15 @@
+tunnel: YOUR_TUNNEL_ID
+
+credentials-file: /root/.cloudflared/YOUR_TUNNEL_ID.json
+
+protocol: http2
+
+ingress:
+
+  - hostname: panel.example.com
+    service: http://127.0.0.1:80
+
+  - hostname: node.example.com
+    service: http://127.0.0.1:443
+
+  - service: http_status:404
